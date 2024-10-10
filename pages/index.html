@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Put.io Clone</title>
+    <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+    <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            font-size: medium;
+        }
+
+        .download-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .download-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .download-info h5 {
+            margin: 0;
+        }
+
+        .download-info h6 {
+            margin: 0;
+            color: #777;
+        }
+
+        .file-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .file-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .file-item h4 {
+            margin: 0;
+        }
+
+        /* Video player styling */
+        #videoPlayer {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        /* Form styling */
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input {
+            padding: 5px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Button styling */
+        button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Put.io Clone - Torrent Downloader and Streamer</h2>
+    <form id="torrent-form">
+        <label for="magnet_link">Magnet Link:</label>
+        <input type="text" id="magnet_link" name="magnet_link" required>
+        <button type="submit">Download Torrent</button>
+    </form>
+
+    <h3>Active Torrents</h3>
+    <div id="active-downloads"></div>
+
+
+    <h3>Files</h3>
+    <div id="fileList"></div>
+
+
+
+    <!-- // i need a div with 3 butons to stop all downloads, stop download by hash and fetch active downloads -->
+    <div>
+        <button onclick="stopAllDownloads()">Stop All Downloads</button>
+        <!-- <button onclick="stopDownload({ magnet_link: 'magnet_link', hash: 'hash' })">Stop Download</button> -->
+        <button onclick="displayActiveDownloads()">Fetch Active Downloads</button>
+    </div>
+
+
+
+    <h3>Video Stream</h3>
+    <video id="videoPlayer" controls preload="auto" width="640" height="264">
+        <source src="" id="videoSource" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+
+        const form = document.getElementById('torrent-form');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoSource = document.getElementById('videoSource');
+        const torrentList = document.getElementById('torrent-list');
+        const magnetLinkInput = document.getElementById('magnet_link');
+        const downloadedTorrents = document.getElementById('downloaded-torrents');
+        const fileListContainer = document.getElementById('fileList');
+        const activeDownloads = document.getElementById('active-downloads');
+
+        loadFiles();
+        displayActiveDownloads();
+
+        setInterval(() => {
+            displayActiveDownloads();
+        }, 1000);
+
+        setInterval(() => {
+            loadFiles();
+        }, 5000);
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form default behavior
+            const magnetLink = document.getElementById('magnet_link').value;
+
+            console.log('Form submitted');
+            console.log('Magnet link:', magnetLink);
+
+
+            // Send the magnet link to the server
+            fetch('/upload-torrent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ magnet_link: magnetLink }), // Sending magnet link in JSON format
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    if (data.fileName) {
+                        // Log success and update video player source
+                        console.log(data);
+                        alert(data.message);
+
+                        // Assuming the video is served from the /public/videos/ directory
+                        const videoUrl = `/videos/${data.fileName}`;
+                        document.getElementById('videoSource').src = videoUrl;
+
+                        // Load the new source into the video player
+                        const videoPlayer = document.getElementById('videoPlayer');
+                        videoPlayer.load(); // Reload the video with the new source
+                        videoPlayer.play(); // Start playback automatically (optional)
+                    } else {
+                        alert("No .mp4 file found in the torrent.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while downloading the torrent.');
+                });
+        });
+
+        // function to stop download by hash
+        function stopDownload({ magnet_link, hash }) {
+            fetch('/stop-download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ hash, magnet_link }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while stopping the download.');
+                });
+        }
+
+        function stopAllDownloads() {
+            fetch('/stop-all-downloads')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while stopping all downloads.');
+                });
+        }
+
+        function displayActiveDownloads() {
+            const downloadInfo = getDownloadInfo();
+            function getDownloadInfo(download) {
+                if (!download) {
+                    return '<h6>No active downloads</h6>';
+                }
+                const { name, progress, downloadSpeed, downloaded } = download;
+                return `
+                
+                <div class="download-info">
+
+                    <h5><b>${progress}%</b> - ${name}</h5>
+                    
+                    <h6>Speed: ${(downloadSpeed / 1024 / 1024).toFixed(2)} MB/s
+                    <br>
+                 Total: ${(downloaded / 1024 / 1024).toFixed(2)} MB </h6>
+
+                </div>
+                    
+                
+                `;
+            }
+            fetch('/active-downloads')
+                .then(response => response.json())
+                .then(downloads => {
+                    activeDownloads.innerHTML = ''; // Clear existing list
+                    downloads.forEach(download => {
+                        const downloadItem = document.createElement('div');
+                        downloadItem.classList.add('download-item');
+                        downloadItem.innerHTML = getDownloadInfo(download);
+                        activeDownloads.appendChild(downloadItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching active downloads:', error);
+                    activeDownloads.innerHTML = '<h6>Error fetching active downloads</h6>';
+                });
+        }
+
+        // Fetch and display active torrents on page load
+        function fetchActiveTorrents() {
+            fetch('/active-torrents')
+                .then(response => response.json())
+                .then(torrents => {
+                    torrentList.innerHTML = '';
+                    torrents.forEach(torrent => {
+                        const li = document.createElement('li');
+                        console.log(torrent);
+                        li.textContent = torrent;
+                        torrentList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching active torrents:', error);
+                    torrentList.innerHTML = '<li>Error fetching active torrents</li>';
+                });
+        }
+
+        function loadFiles() {
+            fetch('/list-files')
+                .then(response => response.json())
+                .then(files => {
+                    fileListContainer.innerHTML = ''; // Clear existing list
+                    files.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.classList.add('file-item');
+                        fileItem.innerHTML = `<h4 style="text-decoration: underline; color: blue; " onclick="playVideo('videos/${file}')">${file}</h4>`;
+                        fileListContainer.appendChild(fileItem);
+                    });
+                })
+                .catch(error => console.error('Error loading files:', error));
+        }
+
+        // Function to play video in the player
+        function playVideo(src) {
+            videoSource.src = src;
+            videoPlayer.load(); // Load the new video source
+            videoPlayer.play(); // Play the video
+        }
+
+
+    </script>
+</body>
+
+</html>
