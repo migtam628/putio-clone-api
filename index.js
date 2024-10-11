@@ -263,6 +263,8 @@ app.get('/stop-all-downloads', (req, res) => {
     res.status(200).send('All downloads stopped.');
 });
 
+app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
+ 
 
 function stopAllDownloads() {
     client.torrents.forEach(torrent => {
@@ -403,8 +405,8 @@ function transcodeMkvToMp4(inputPath, outputPath, res) {
     }
 
     // Use a more general command with codecs
-    const command = `ffmpeg -i "${inputPath}" -c:v libx264 -c:a aac -preset fast -strict experimental "${outputPath}" -progress - `;
-
+    // const command = `ffmpeg -i "${inputPath}" -c:v libx264 -c:a aac -preset fast -strict experimental "${outputPath}" -progress - `;
+    const command = `ffmpeg -i "${inputPath}" -codec copy "${outputPath}"`;
     console.log('Executing command:', command);
 
     exec(command, (err, stdout, stderr) => {
