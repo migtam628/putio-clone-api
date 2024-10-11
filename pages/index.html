@@ -106,6 +106,14 @@
 
 <body>
     <h2>Put.io Clone - Torrent Downloader and Streamer</h2>
+
+    <h3>Video Stream</h3>
+    <video id="videoPlayer" controls preload="auto" width="640" height="264">
+        <source src="" id="videoSource" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+
     <form id="torrent-form">
         <label for="magnet_link">Magnet Link:</label>
         <input type="text" id="magnet_link" name="magnet_link" required>
@@ -130,11 +138,6 @@
 
 
 
-    <h3>Video Stream</h3>
-    <video id="videoPlayer" controls preload="auto" width="640" height="264">
-        <source src="" id="videoSource" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
 
     <script>
 
@@ -152,11 +155,23 @@
 
         setInterval(() => {
             displayActiveDownloads();
-        }, 1000);
+        }, 10000);
 
         setInterval(() => {
             loadFiles();
-        }, 5000);
+        }, 10000);
+
+        // set listener to wait for clipboard paste
+        document.addEventListener('paste', function (event) {
+            // Get the clipboard data
+            const paste = (event.clipboardData || window.clipboardData).getData('text');
+            // Check if the clipboard data is a magnet link
+            if (paste.startsWith('magnet:?xt=urn:btih:')) {
+                // Set the clipboard data as the magnet link
+                magnetLinkInput.value = paste;
+                form.dispatchEvent(new Event('submit')); // Submit the form
+            }
+        });
 
         form.addEventListener('submit', function (event) {
             event.preventDefault(); // Prevent form default behavior
