@@ -225,8 +225,8 @@ app.post('/upload-torrent', upload.single('torrent'), (req, res) => {
 
 // Serve a basic page for uploading torrents and streaming videos
 app.get('/', (req, res) => {
-  res.setHeader('Content-Type', 'text/html');
-  res.sendFile(resolve(__dirname, 'pages/index.html'));
+    res.setHeader('Content-Type', 'text/html');
+    res.sendFile(resolve(__dirname, 'pages/index.html'));
 });
 
 app.get('/active-torrents', (req, res) => {
@@ -264,7 +264,7 @@ app.get('/stop-all-downloads', (req, res) => {
 });
 
 app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
- 
+
 
 function stopAllDownloads() {
     client.torrents.forEach(torrent => {
