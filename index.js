@@ -6,8 +6,6 @@ import WebTorrent from 'webtorrent';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { exec } from 'child_process';
-// ffmpeg
-// import ffmpeg from 'fluent-ffmpeg';
 import chokidar from 'chokidar';  // Import chokidar
 
 const app = express();
@@ -44,6 +42,11 @@ app.use(express.static('public'));
 // app.use(express.static('putonline/dist'));
 
 // Watch the video directory for new .mkv files
+
+if (!fs.existsSync(VIDEO_PATH)) {
+    fs.mkdirSync(VIDEO_PATH, { recursive: true });
+}
+
 const watcher = chokidar.watch(VIDEO_PATH, {
     ignored: /\.mp4$/, // Ignore existing .mp4 files - avoid infinite loops
     persistent: true, // Keep watching
@@ -53,20 +56,6 @@ const watcher = chokidar.watch(VIDEO_PATH, {
     }
 });
 
-
-// function transcodeMkvToMp4(inputPath, outputPath) {
-//     exec(`ffmpeg -i "${inputPath}" -codec copy "${outputPath}"`, (err) => {
-//         if (err) {
-//             console.error('Error transcoding file:', err);
-//             // Consider adding error handling (e.g., deleting the partial .mp4)
-//             return;
-//         }
-//         console.log('Transcoding completed successfully:', outputPath);
-
-//         // Optional: Delete the original .mkv file
-//        // fs.unlinkSync(inputPath);
-//     });
-// }
 
 
 watcher.on('add', (filePath) => {
@@ -128,19 +117,96 @@ app.get('/stream/:fileName', (req, res) => {
     }
 });
 
+// Route to delete a specific file in the videos directory
+app.delete('/delete-file/:fileName', (req, res) => {
+    const fileName = req.params.fileName;
+    const filePath = path.join(VIDEO_PATH, fileName);
 
+    // Check if the file exists
+    if (fs.existsSync(filePath)) {
+        // Delete the file
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error('Error deleting file:', err);
+                return res.status(500).send('Error deleting file.');
+            }
+            console.log(`File deleted: ${filePath}`);
+            res.status(200).send(`File ${fileName} deleted successfully.`);
+        });
+    } else {
+        res.status(404).send('File not found.');
+    }
+});
 
-// New route to list all files in the videos directory
-app.get('/list-files', (req, res) => {
+// Route to delete all files in the videos directory
+app.delete('/delete-all-files', (req, res) => {
     fs.readdir(VIDEO_PATH, (err, files) => {
         if (err) {
             return res.status(500).send('Unable to scan directory.');
         }
-        // Send the list of files as JSON
-        res.json(files);
+
+        // Loop through all files and delete them
+        files.forEach(file => {
+            const filePath = path.join(VIDEO_PATH, file);
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    console.error('Error deleting file:', err);
+                } else {
+                    console.log(`File deleted: ${filePath}`);
+                }
+            });
+        });
+
+        res.status(200).send('All files deleted successfully.');
     });
 });
 
+app.delete('/delete-directory', (req, res) => {
+    const directoryName = req.query.name;
+    const fullPath = path.join(VIDEO_PATH, directoryName);
+
+    deleteFolderRecursive(fullPath);
+
+    res.json({ message: `Directory ${directoryName} deleted.` });
+});
+
+app.delete('/delete-all-directories', (req, res) => {
+    const videosDir = VIDEO_PATH;
+
+    deleteFolderRecursive(videosDir); // Delete everything recursively
+
+    fs.mkdirSync(videosDir); // Recreate the root folder
+
+    res.json({ message: 'All files deleted.' });
+});
+
+
+app.delete('/delete-directory', (req, res) => {
+    const directoryName = req.query.name;
+    const fullPath = path.join(VIDEO_PATH, directoryName);
+
+    deleteFolderRecursive(fullPath);
+
+    res.json({ message: `Directory ${directoryName} deleted.` });
+});
+
+
+// New route to list all files in the videos directory
+app.get('/list-files', (req, res) => {
+    const dir = VIDEO_PATH;
+
+    fs.readdir(dir, (err, items) => {
+        if (err) return res.status(500).json({ error: 'Error reading directory' });
+
+        const fileList = items.map(item => {
+            const itemPath = path.join(dir, item);
+            const isDirectory = fs.statSync(itemPath).isDirectory();
+            return { name: item, isDirectory };
+        });
+
+        res.json(fileList);
+    });
+});
 // Torrent download route
 app.post('/upload-torrent', upload.single('torrent'), (req, res) => {
     const magnetLink = req.body.magnet_link;
@@ -169,39 +235,6 @@ app.post('/upload-torrent', upload.single('torrent'), (req, res) => {
             const file = torrent.files.find((file) => file.name.endsWith('.mp4'));
             const mp4File = torrent.files.find((file) => file.name.endsWith('.mp4'));
             const mkvFile = torrent.files.find((file) => file.name.endsWith('.mkv'));
-
-            // const filePath = path.join(VIDEO_PATH, file.name);
-            // const fileExt = path.extname(file.name);
-
-            // file.getBuffer((err, buffer) => {
-            //     if (err) throw err;
-
-            //     fs.writeFileSync(filePath, buffer);
-            //     console.log(`Downloaded: ${filePath}`);
-
-            //     // Convert .mkv to .mp4 if needed
-            //     if (fileExt === '.mkv') {
-            //         const outputFilePath = filePath.replace('.mkv', '.mp4');
-
-            //         convertToMp4(filePath, outputFilePath)
-            //             .then((output) => {
-            //                 console.log(`Converted to MP4: ${output}`);
-            //                 res.status(200).send({
-            //                     message: 'File downloaded and converted to MP4.',
-            //                     fileName: path.basename(output),
-            //                 });
-            //             })
-            //             .catch((err) => {
-            //                 res.status(500).send('Error converting file to MP4');
-            //                 console.error(err);
-            //             });
-            //     } else {
-            //         res.status(200).send({
-            //             message: 'File downloaded successfully.',
-            //             fileName: file.name,
-            //         });
-            //     }
-            // });
 
             // Handle MP4 or MKV Files
             if (mp4File) {
@@ -263,7 +296,61 @@ app.get('/stop-all-downloads', (req, res) => {
     res.status(200).send('All downloads stopped.');
 });
 
+app.get('/stop-download', (req, res) => {
+    const magnetLink = req.query.magnetLink;
+    const hash = req.query.hash;
+    if (!magnetLink) {
+        return res.status(400).send('Magnet link is required.');
+    }
+
+    const torrent = client.get(magnetLink);
+    if (!torrent) {
+        return res.status(404).send('Torrent not found.');
+    }
+
+    torrent.destroy(() => {
+        console.log(`Stopped downloading ${torrent.name}`);
+        activeTorrents = activeTorrents.filter((link) => link !== magnetLink);
+        res.status(200).send('Download stopped successfully.');
+    });
+}
+);
+
 app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
+
+app.get('/files/:fileName', (req, res) => {
+    const filePath = path.join(VIDEO_PATH, req.params.fileName);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).send('File not found.');
+    }
+    const range = req.headers.range;
+    streamVideo(filePath, range, res);
+});
+
+function streamVideo(filePath, range, res) {
+    const stat = fs.statSync(filePath);
+    const total = stat.size;
+
+    if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : total - 1;
+        const chunkSize = (end - start) + 1;
+        const fileStream = fs.createReadStream(filePath, { start, end });
+        res.writeHead(206, {
+            'Content-Range': `bytes ${start}-${end}/${total}`,
+            'Content-Length': chunkSize,
+            'Content-Type': 'video/mp4'
+        });
+        fileStream.pipe(res);
+    } else {
+        res.writeHead(200, {
+            'Content-Length': total,
+            'Content-Type': 'video/mp4'
+        });
+        fs.createReadStream(filePath).pipe(res);
+    }
+}
 
 
 function stopAllDownloads() {
@@ -277,6 +364,20 @@ function stopAllDownloads() {
         });
     });
 }
+
+const deleteFolderRecursive = function (folderPath) {
+    if (fs.existsSync(folderPath)) {
+        fs.readdirSync(folderPath).forEach((file) => {
+            const curPath = path.join(folderPath, file);
+            if (fs.lstatSync(curPath).isDirectory()) {
+                deleteFolderRecursive(curPath); // Recursive delete
+            } else {
+                fs.unlinkSync(curPath); // Delete file
+            }
+        });
+        fs.rmdirSync(folderPath); // Remove the directory itself
+    }
+};
 
 function displayActiveDownloads() {
     if (client.torrents.length === 0) {
@@ -332,6 +433,32 @@ function handleFile(file, res) {
     });
 }
 
+
+function transcodeMkvToMp4(inputPath, outputPath) {
+    exec(`ffmpeg -i "${inputPath}" -codec copy "${outputPath}"`, (err) => {
+        if (err) {
+            console.error('Error transcoding file:', err);
+            return;
+        }
+        console.log('Transcoding completed successfully:', outputPath);
+        // Optionally delete the original .mkv file after conversion
+        // fs.unlinkSync(inputPath);
+    });
+}
+// function transcodeMkvToMp4(inputPath, outputPath) {
+//     exec(`ffmpeg -i "${inputPath}" -codec copy "${outputPath}"`, (err) => {
+//         if (err) {
+//             console.error('Error transcoding file:', err);
+//             // Consider adding error handling (e.g., deleting the partial .mp4)
+//             return;
+//         }
+//         console.log('Transcoding completed successfully:', outputPath);
+
+//         // Optional: Delete the original .mkv file
+//        // fs.unlinkSync(inputPath);
+//     });
+// }
+
 // Function to convert .mkv to .mp4
 // function transcodeMkvToMp4(inputPath, outputPath, res) {
 //     // Log the full command for debugging purposes
@@ -385,60 +512,62 @@ function handleFile(file, res) {
 //     });
 // }
 
-function transcodeMkvToMp4(inputPath, outputPath, res) {
-    if (!fs.existsSync(inputPath)) {
-        console.log('File not found:', inputPath);
-        return;
-        // return res.status(404).send('File not found.');
-    }
+// function transcodeMkvToMp4(inputPath, outputPath, res) {
+//     if (!fs.existsSync(inputPath)) {
+//         console.log('File not found:', inputPath);
+//         return;
+//         // return res.status(404).send('File not found.');
+//     }
 
-    // if input file is ".DS_Store" file, return else if file extension is any video file
-    console.log('File extension:', path.extname(inputPath).toLowerCase());
-    if (path.basename(inputPath) === '.DS_Store') {
-        console.log('File not found:', inputPath);
-        return;
-        // return res.status(404).send('File not
-    } else if (!['.mkv', '.mp4', '.avi', '.mov', '.flv', '.wmv', '.webm'].includes(path.extname(inputPath).toLowerCase())) {
-        console.log('Unsupported file format:', inputPath);
-        return;
-        // return res.status(400).send('Unsupported file format.');
-    }
+//     // if input file is ".DS_Store" file, return else if file extension is any video file
+//     console.log('File extension:', path.extname(inputPath).toLowerCase());
+//     if (path.basename(inputPath) === '.DS_Store') {
+//         console.log('File not found:', inputPath);
+//         return;
+//         // return res.status(404).send('File not
+//     } else if (!['.mkv', '.mp4', '.avi', '.mov', '.flv', '.wmv', '.webm'].includes(path.extname(inputPath).toLowerCase())) {
+//         console.log('Unsupported file format:', inputPath);
+//         return;
+//         // return res.status(400).send('Unsupported file format.');
+//     }
 
-    // Use a more general command with codecs
-    // const command = `ffmpeg -i "${inputPath}" -c:v libx264 -c:a aac -preset fast -strict experimental "${outputPath}" -progress - `;
-    const command = `ffmpeg -i "${inputPath}" -codec copy "${outputPath}"`;
-    console.log('Executing command:', command);
+//     // Use a more general command with codecs
+//     // const command = `ffmpeg -i "${inputPath}" -c:v libx264 -c:a aac -preset fast -strict experimental "${outputPath}" -progress - `;
+//     const command = `ffmpeg -i "${inputPath}" -codec copy "${outputPath}"`;
+//     console.log('Executing command:', command);
 
-    exec(command, (err, stdout, stderr) => {
-        if (err) {
-            console.error('Error transcoding file:', err);
-            console.error('FFmpeg stderr:', stderr);
-            if (res) {
-                return res.status(500).send('Error transcoding file.');
-            }
-            return;
-        }
+//     exec(command, (err, stdout, stderr) => {
+//         if (err) {
+//             console.error('Error transcoding file:', err);
+//             console.error('FFmpeg stderr:', stderr);
+//             if (res) {
+//                 return res.status(500).send('Error transcoding file.');
+//             }
+//             return;
+//         }
 
-        console.log('FFmpeg stdout:', stdout);
-        console.log({
-            message: 'Transcoding completed successfully.',
-            fileName: path.basename(outputPath),
-        });
+//         console.log('FFmpeg stdout:', stdout);
+//         console.log({
+//             message: 'Transcoding completed successfully.',
+//             fileName: path.basename(outputPath),
+//         });
 
-        // remove old .mkv file from the dir
-        // fs.unlinkSync(inputPath);
+//         // remove old .mkv file from the dir
+//         // fs.unlinkSync(inputPath);
 
-        if (res) {
-            return res.status(200).send({
-                message: 'Transcoding completed successfully.',
-                fileName: path.basename(outputPath),
-            });
-        }
-    });
-}
+//         if (res) {
+//             return res.status(200).send({
+//                 message: 'Transcoding completed successfully.',
+//                 fileName: path.basename(outputPath),
+//             });
+//         }
+//     });
+// }
+
 
 // Start the server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 2000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
