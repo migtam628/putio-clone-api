@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Put.io Clone</title>
+    <!-- IMPORT js/app.js -->
     <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
     <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -82,37 +83,44 @@
             cursor: pointer;
         }
     </style>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core@v8/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core@v8/dist/ionic/ionic.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core@v8/css/ionic.bundle.css" />
+    <script type="module" src="js/app.js"></script>
 </head>
 
 <body class="bg-gray-100 text-gray-800 font-sans">
     <header class="bg-blue-600 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center p-4">
             <h1 class="text-3xl font-bold text-white">Put.io Clone</h1>
-            <nav class="relative dropdown">
-                <button
-                    class="text-white p-2 rounded-lg hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16m-7 6h7" />
-                    </svg>
-                </button>
-                <div
-                    class="dropdown-menu absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-48 hidden">
-                    <button onclick="stopAllDownloads()"
-                        class="block w-full text-left p-2 hover:bg-blue-100 rounded-lg">Stop All Downloads</button>
-                    <button onclick="displayActiveDownloads()"
-                        class="block w-full text-left p-2 hover:bg-blue-100 rounded-lg">Fetch Active Downloads</button>
-                    <button onclick="deleteAllFiles()"
-                        class="block w-full text-left p-2 hover:bg-blue-100 rounded-lg">Delete All Files</button>
-                </div>
-            </nav>
+            <div class="flex items-center space-x-4">
+                <span id="active-torrents-badge"
+                    class="hidden bg-red-500 text-white text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">0</span>
+                <nav class="relative dropdown">
+                    <button
+                        class="text-white p-2 rounded-lg hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                    <div
+                        class="dropdown-menu absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-48 hidden">
+                        <button onclick="stopAllDownloads()"
+                            class="block w-full text-left p-2 hover:bg-blue-100 rounded-lg">Stop All Downloads</button>
+                        <button onclick="displayActiveDownloads()"
+                            class="block w-full text-left p-2 hover:bg-blue-100 rounded-lg">Fetch Active
+                            Downloads</button>
+                        <button onclick="deleteAllFiles()"
+                            class="block w-full text-left p-2 hover:bg-blue-100 rounded-lg">Delete All Files</button>
+                    </div>
+                </nav>
+            </div>
         </div>
     </header>
 
     <div class="container mx-auto p-4">
-        <!-- <h2 class="text-2xl font-bold mb-4">Torrent Downloader and Streamer</h2> -->
-
         <h3 class="text-xl font-semibold mt-6">Video Stream</h3>
         <video id="videoPlayer" controls preload="auto" class="w-full rounded-lg shadow-lg my-4">
             <source src="" id="videoSource" type="video/mp4">
@@ -120,20 +128,48 @@
         </video>
 
         <form id="torrent-form" class="mb-4">
-            <label for="magnet_link" class="block font-semibold mb-1">Magnet Link:</label>
-            <input type="text" id="magnet_link" name="magnet_link" required
-                class="p-2 border border-gray-300 rounded-lg w-full mb-2">
-            <button type="submit"
-                class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out">
-                Download Torrent
-            </button>
+            <!-- <label for="magnet_link" class="block font-semibold mb-1">Magnet Link:</label> -->
+            <div class="flex">
+                <input type="text" id="magnet_link" name="magnet_link"
+                    class="w-full rounded-lg p-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    placeholder="Pas te magnet link here" required>
+
+                <button type="submit"
+                    class="ml-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-3 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v6h16v-6M12 3v13m0 0l-4-4m4 4l4-4" />
+                    </svg>
+                </button>
+            </div>
         </form>
 
-        <h3 class="text-xl font-semibold mt-6">Active Torrents</h3>
-        <div id="active-downloads" class="mb-4"></div>
+        <ion-segment value="torrents" onchange="handleOnSegmentChange(event)">
+            <ion-segment-button value="torrents">
+                <ion-label>Active Torrent</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="videos">
+                <ion-label>Videos</ion-label>
+            </ion-segment-button>
+        </ion-segment>
 
-        <h3 class="text-xl font-semibold mt-6">Files</h3>
-        <div id="fileList" class="mb-4"></div>
+
+        <!-- Active Torrents Segment -->
+        <section class="mb-8">
+            <h3 class="text-xl font-semibold mt-6 mb-4">Active Torrents</h3>
+            <div id="active-downloads" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Active torrent items will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- Files Segment -->
+        <section>
+            <h3 class="text-xl font-semibold mt-6 mb-4">Files</h3>
+            <div id="fileList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- File items will be dynamically inserted here -->
+            </div>
+        </section>
     </div>
 
     <!-- Modal Structure -->
@@ -146,6 +182,8 @@
     </div>
 
     <script>
+
+
         const form = document.getElementById('torrent-form');
         const videoPlayer = document.getElementById('videoPlayer');
         const videoSource = document.getElementById('videoSource');
@@ -163,48 +201,17 @@
             loadFiles();
         }, 5000);
 
+        // wait for clipboard paste to be implemented
+        document.addEventListener('paste', (event) => {
+            const paste = (event.clipboardData || window.clipboardData).getData('text');
+            document.getElementById('magnet_link').value = paste;
+            form.dispatchEvent(new Event('submit'));
+        });
 
-        // document.addEventListener('DOMContentLoaded', () => {
-        //     // Function to fetch directory contents
-        //     const fetchDirectoryContents = (directoryName) => {
-        //         fetch(`/list-files?dir=${directoryName}`)
-        //             .then(response => response.json())
-        //             .then(data => {
-        //                 const directoryContents = document.getElementById('directoryContents');
-        //                 directoryContents.innerHTML = ''; // Clear previous contents
-
-        //                 // Update the modal title
-        //                 document.getElementById('directoryTitle').textContent = `Contents of ${directoryName}`;
-
-        //                 data.forEach(item => {
-        //                     const listItem = document.createElement('li');
-        //                     listItem.textContent = item.name + (item.isDirectory ? ' (Folder)' : ' (File)');
-
-        //                     // If it's a directory, add click event to view its contents
-        //                     if (item.isDirectory) {
-        //                         listItem.onclick = () => fetchDirectoryContents(item.name);
-        //                         listItem.style.cursor = 'pointer';
-        //                         listItem.style.color = 'blue'; // Optional: style for folders
-        //                     }
-        //                     directoryContents.appendChild(listItem);
-        //                 });
-
-        //                 // Display the modal
-        //                 document.getElementById('directoryModal').style.display = 'block';
-        //             })
-        //             .catch(error => console.error('Error fetching directory contents:', error));
-        //     };
-
-        //     // Close modal functionality
-        //     document.getElementById('closeModal').onclick = function () {
-        //         document.getElementById('directoryModal').style.display = 'none';
-        //     };
-
-        //     // Attach click event to directory elements
-        //     document.querySelectorAll('.directory').forEach(directory => {
-        //         directory.onclick = () => fetchDirectoryContents(directory.dataset.name);
-        //     });
-        // });
+        // Close modal functionality
+        document.getElementById('closeModal').onclick = function () {
+            document.getElementById('directoryModal').style.display = 'none';
+        };
 
         form.addEventListener('submit', function (event) {
             event.preventDefault();
@@ -256,67 +263,73 @@
                     console.log(error);
                 });
         }
-        
-      function displayActiveDownloads() {
-    fetch('/active-downloads')
-        .then(response => response.json())
-        .then(downloads => {
-            activeDownloads.innerHTML = ''; // Clear previous downloads
-            if (downloads.length === 0) {
-                activeDownloads.innerHTML = '<h6 class="text-gray-500">No active downloads.</h6>';
-                return;
-            }
-            downloads.forEach(download => {
-                const downloadItem = document.createElement('div');
-                downloadItem.classList.add(
-                    'bg-white', 
-                    'border', 
-                    'border-gray-300', 
-                    'rounded-lg', 
-                    'p-4', 
-                    'shadow-md', 
-                    'mb-4', 
-                    'transition', 
-                    'transform', 
-                    'hover:scale-105', 
-                    'hover:shadow-lg', 
-                    'relative'
-                );
 
-                downloadItem.innerHTML = `
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <h5 class="font-bold text-lg text-blue-600 mb-2 sm:mb-0">
-                            <b>${download.progress}%</b> - ${download.name}
-                        </h5>
-                        <div class="text-gray-500">
-                            <h6 class="text-sm">Speed: ${(download.downloadSpeed / 1024 / 1024).toFixed(2)} MB/s</h6>
-                            <h6 class="text-sm">Total: ${(download.downloaded / 1024 / 1024).toFixed(2)} MB</h6>
-                        </div>
-                    </div>
-                    <div class="mt-2">
-                        <div class="bg-gray-200 rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${download.progress}%;"></div>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-sm text-gray-500 text-right">
-                        ${download.status === 'completed' ? '✅ Completed' : download.status === 'failed' ? '❌ Failed' : '⬇️ Downloading'}
-                    </div>
-                    <div class="mt-4 flex justify-end space-x-2">
-                        <button class="bg-red-500 text-white rounded-md px-3 py-1 text-sm hover:bg-red-600 transition duration-200" onclick="stopDownload('${download.magnetLink}')">Cancel</button>
-                    </div>
-                `;
+        function displayActiveDownloads() {
+            fetch('/active-downloads')
+                .then(response => response.json())
+                .then(downloads => {
+                    activeDownloads.innerHTML = ''; // Clear previous downloads
 
-                // Optional: Add a tooltip
-                downloadItem.setAttribute('title', `Download progress: ${download.progress}%\nSpeed: ${(download.downloadSpeed / 1024 / 1024).toFixed(2)} MB/s`);
+                    // Update the active torrents badge
+                    const badge = document.getElementById('active-torrents-badge');
+                    if (downloads.length > 0) {
+                        badge.textContent = downloads.length;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
 
-                activeDownloads.appendChild(downloadItem);
-            });
-        })
-        .catch(error => {
-            activeDownloads.innerHTML = '<h6 class="text-red-500">Error fetching active downloads</h6>';
-        });
-}
+                    if (downloads.length === 0) {
+                        activeDownloads.innerHTML = '<h6 class="text-gray-500">No active downloads.</h6>';
+                        return;
+                    }
+                    downloads.forEach(download => {
+                        const downloadItem = document.createElement('div');
+                        downloadItem.classList.add(
+                            'bg-white',
+                            'border',
+                            'border-gray-300',
+                            'rounded-lg',
+                            'p-4',
+                            'shadow-md',
+                            'hover:shadow-lg',
+                            'transition',
+                            'duration-300',
+                            'flex',
+                            'flex-col',
+                            'justify-between'
+                        );
 
+                        downloadItem.innerHTML = `
+                            <div>
+                                <h5 class="font-bold text-lg text-blue-600 mb-2">
+                                    <b>${download.progress}%</b> - ${download.name}
+                                </h5>
+                                <div class="text-gray-500 text-sm">
+                                    <p>Speed: ${(download.downloadSpeed / 1024 / 1024).toFixed(2)} MB/s</p>
+                                    <p>Total: ${(download.downloaded / 1024 / 1024).toFixed(2)} MB</p>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${download.progress}%;"></div>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-500">
+                                    ${download.status === 'completed' ? '✅ Completed' : download.status === 'failed' ? '❌ Failed' : '⬇️ Downloading'}
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-end">
+                                <button class="bg-red-500 text-white rounded-md px-3 py-1 text-sm hover:bg-red-600 transition duration-200" onclick="stopDownload('${download.magnetLink}')">Cancel</button>
+                            </div>
+                        `;
+
+                        activeDownloads.appendChild(downloadItem);
+                    });
+                })
+                .catch(error => {
+                    activeDownloads.innerHTML = '<h6 class="text-red-500">Error fetching active downloads</h6>';
+                });
+        }
 
         function loadFiles() {
             fetch('/list-files')
@@ -325,16 +338,43 @@
                     fileListContainer.innerHTML = ''; // Clear existing list
                     items.forEach(item => {
                         const fileItem = document.createElement('div');
-                        fileItem.classList.add('bg-white', 'border', 'border-gray-300', 'rounded-lg', 'p-3', 'shadow-md', 'mb-2');
+                        fileItem.classList.add(
+                            'bg-white',
+                            'border',
+                            'border-gray-300',
+                            'rounded-lg',
+                            'p-4',
+                            'shadow-md',
+                            'hover:shadow-lg',
+                            'transition',
+                            'duration-300',
+                            'flex',
+                            'flex-col',
+                            'justify-between'
+                        );
 
                         if (item.isDirectory) {
                             // It's a directory, set it up as a clickable folder
-                            fileItem.innerHTML = `<h4 class="text-green-600 font-semibold cursor-pointer" onclick="loadDirectory('${item.name}')">[Folder] ${item.name}</h4>
-                                              <button onclick="deleteDirectory('${item.name}')" class="bg-red-500 text-white p-1 rounded-lg hover:bg-red-400 transition duration-200">Delete Directory</button>`;
+                            fileItem.innerHTML = `
+                                <div>
+                                    <h4 class="text-green-600 font-semibold cursor-pointer" onclick="loadDirectory('${item.name}')">📁 ${item.name}</h4>
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button onclick="deleteDirectory('${item.name}')"
+                                        class="bg-red-500 text-white p-1 rounded-lg hover:bg-red-400 transition duration-200">Delete Directory</button>
+                                </div>
+                            `;
                         } else {
                             // It's a file
-                            fileItem.innerHTML = `<h4 class="text-blue-600 font-semibold cursor-pointer" onclick="playVideo('videos/${item.name}')">${item.name}</h4>
-                                              <button onclick="deleteFile('${item.name}')" class="bg-red-500 text-white p-1 rounded-lg hover:bg-red-400 transition duration-200">Delete File</button>`;
+                            fileItem.innerHTML = `
+                                <div>
+                                    <h4 class="text-blue-600 font-semibold cursor-pointer" onclick="playVideo('videos/${item.name}')">🎬 ${item.name}</h4>
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button onclick="deleteFile('${item.name}')"
+                                        class="bg-red-500 text-white p-1 rounded-lg hover:bg-red-400 transition duration-200">Delete File</button>
+                                </div>
+                            `;
                         }
 
                         fileListContainer.appendChild(fileItem);
@@ -394,6 +434,36 @@
                     console.error('Error deleting all files:', error);
                     alert('An error occurred while deleting all files.');
                 });
+        }
+
+        // Function to fetch directory contents (if needed)
+        function loadDirectory(directoryName) {
+            fetch(`/list-files?dir=${encodeURIComponent(directoryName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const directoryContents = document.getElementById('directoryContents');
+                    directoryContents.innerHTML = ''; // Clear previous contents
+
+                    // Update the modal title
+                    document.getElementById('directoryTitle').textContent = `Contents of ${directoryName}`;
+
+                    data.forEach(item => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = item.name + (item.isDirectory ? ' (Folder)' : ' (File)');
+
+                        // If it's a directory, add click event to view its contents
+                        if (item.isDirectory) {
+                            listItem.onclick = () => loadDirectory(item.name);
+                            listItem.style.cursor = 'pointer';
+                            listItem.style.color = 'blue'; // Optional: style for folders
+                        }
+                        directoryContents.appendChild(listItem);
+                    });
+
+                    // Display the modal
+                    document.getElementById('directoryModal').style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching directory contents:', error));
         }
     </script>
 </body>
