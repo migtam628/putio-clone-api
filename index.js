@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { exec } from 'child_process';
 import chokidar from 'chokidar';  // Import chokidar
+import cors from 'cors';
 
 const app = express();
 const client = new WebTorrent();
@@ -27,18 +28,24 @@ let activeDownloads = [];
 app.use(express.json()); // Add this to parse incoming JSON data
 app.use(express.urlencoded({ extended: true })); // To handle form-encoded data
 
+// cors
+app.use(cors())
+
+
+
 // add cross origin resource sharing
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    //res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    //res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Credentials', true);
     // res.setHeader('Content-Type', 'application/json');
 
     next();
 });
 // Serve static files from public folder
 app.use(express.static('public'));
+app.use(express.static('dist'));
 // app.use(express.static('putonline/dist'));
 
 // Watch the video directory for new .mkv files
@@ -259,7 +266,10 @@ app.post('/upload-torrent', upload.single('torrent'), (req, res) => {
 // Serve a basic page for uploading torrents and streaming videos
 app.get('/', (req, res) => {
     res.setHeader('Content-Type', 'text/html');
-    res.sendFile(resolve(__dirname, 'pages/index.html'));
+    res.setHeader('Content-Type', 'text/css');
+    res.setHeader('Vary', 'Accept-Encoding');
+
+    res.sendFile(resolve(__dirname, 'dist/index.html'));
 });
 
 app.get('/active-torrents', (req, res) => {
@@ -296,25 +306,25 @@ app.get('/stop-all-downloads', (req, res) => {
     res.status(200).send('All downloads stopped.');
 });
 
-app.get('/stop-download', (req, res) => {
-    const magnetLink = req.query.magnetLink;
-    const hash = req.query.hash;
-    if (!magnetLink) {
-        return res.status(400).send('Magnet link is required.');
-    }
+// app.get('/stop-download', (req, res) => {
+//     const magnetLink = req.query.magnetLink;
+//     const hash = req.query.hash;
+//     if (!magnetLink) {
+//         return res.status(400).send('Magnet link is required.');
+//     }
 
-    const torrent = client.get(magnetLink);
-    if (!torrent) {
-        return res.status(404).send('Torrent not found.');
-    }
+//     const torrent = client.get(magnetLink);
+//     if (!torrent) {
+//         return res.status(404).send('Torrent not found.');
+//     }
 
-    torrent.destroy(() => {
-        console.log(`Stopped downloading ${torrent.name}`);
-        activeTorrents = activeTorrents.filter((link) => link !== magnetLink);
-        res.status(200).send('Download stopped successfully.');
-    });
-}
-);
+//     torrent.destroy(() => {
+//         console.log(`Stopped downloading ${torrent.name}`);
+//         activeTorrents = activeTorrents.filter((link) => link !== magnetLink);
+//         res.status(200).send('Download stopped successfully.');
+//     });
+// }
+// );
 
 app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
 
