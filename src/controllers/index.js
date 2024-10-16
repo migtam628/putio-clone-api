@@ -1,5 +1,5 @@
 import STREAM from './stream.js';
-import DETELE_FILE from './delete_file.js';
+import DELETE_FILE from './delete_file.js';
 import DELETE_ALL_FILES from './delete_all_files.js';
 import DELETE_DIRECTORY from './delete_directory.js';
 import DELETE_ALL_DIRECTORIES from './delete_all_directories.js';
@@ -15,7 +15,7 @@ import STOP_ALL_DOWNLOADS from './stop_all_downloads.js';
 
 export {
     STREAM,
-    DETELE_FILE,
+    DELETE_FILE,
     DELETE_ALL_FILES,
     DELETE_DIRECTORY,
     DELETE_ALL_DIRECTORIES,
