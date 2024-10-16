@@ -5,6 +5,10 @@ import express from 'express';
 import { transcodeMkvToMp4 } from './src/services/functions.js';
 import { app, VIDEO_PATH, upload, __dirname, watcher } from './src/services/config.js';
 import { ACTIVE_DOWNLOADS, ACTIVE_TORRENTS, DELETE_ALL_DIRECTORIES, DELETE_ALL_FILES, DELETE_DIRECTORY, DELETE_FILE, FILES, HOME, LIST_DIRECTORIES, LIST_FILES, STOP_ALL_DOWNLOADS, STOP_DOWNLOAD, STREAM, UPLOAD_TORRENT } from './src/controllers/index.js';
+import dotenv from 'dotenv'
+
+dotenv.config()
+
 
 /* ************************************************************************************************************************************************************************************ */
 
@@ -25,6 +29,7 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 app.use(express.static('dist'));
 
+console.log(process.env.PORT);
 
 /* ************************************************************************************************************************************************************************************ */
 
@@ -90,7 +95,7 @@ app.get('/list-directories', LIST_DIRECTORIES);
 /* ************************************************************************************************************************************************************************************ */
 
 // Start the server
-const PORT = process.env.PORT || 2000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
