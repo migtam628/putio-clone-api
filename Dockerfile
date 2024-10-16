@@ -14,7 +14,7 @@ RUN npm install
 COPY . /app
 
 # Expose port 8001 (or whatever port your app is using)
-EXPOSE 2000
+EXPOSE 3000
 
 # Start the Node.js server
 CMD ["node", "index.js"]
