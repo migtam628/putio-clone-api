@@ -4,7 +4,7 @@ import cors from 'cors';
 import express from 'express';
 import { transcodeMkvToMp4 } from './src/services/functions.js';
 import { app, VIDEO_PATH, upload, __dirname, watcher } from './src/services/config.js';
-import { ACTIVE_DOWNLOADS, ACTIVE_TORRENTS, DELETE_ALL_DIRECTORIES, DELETE_ALL_FILES, DELETE_DIRECTORY, DETELE_FILE, FILES, HOME, LIST_DIRECTORIES, LIST_FILES, STOP_ALL_DOWNLOADS, STOP_DOWNLOAD, STREAM, UPLOAD_TORRENT } from './src/controllers/index.js';
+import { ACTIVE_DOWNLOADS, ACTIVE_TORRENTS, DELETE_ALL_DIRECTORIES, DELETE_ALL_FILES, DELETE_DIRECTORY, DELETE_FILE, FILES, HOME, LIST_DIRECTORIES, LIST_FILES, STOP_ALL_DOWNLOADS, STOP_DOWNLOAD, STREAM, UPLOAD_TORRENT } from './src/controllers/index.js';
 
 /* ************************************************************************************************************************************************************************************ */
 
@@ -61,7 +61,7 @@ app.get('/', HOME);
 
 app.get('/stream/:fileName', STREAM);
 
-app.delete('/delete-file/:fileName', DETELE_FILE);
+app.delete('/delete-file/:fileName', DELETE_FILE);
 
 app.delete('/delete-all-files', DELETE_ALL_FILES);
 
