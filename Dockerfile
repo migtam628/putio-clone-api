@@ -17,6 +17,9 @@ COPY . /app
 ARG PORT
 ENV PORT=${PORT}
 
+# print the value of PORT
+RUN echo "PORT is set to $PORT"
+
 # Expose the port from .env (defaults to 3000 if not specified)
 EXPOSE ${PORT}
 
