@@ -13,8 +13,12 @@ RUN npm install
 # Copy the rest of the application files
 COPY . /app
 
-# Expose port 8001 (or whatever port your app is using)
-EXPOSE 3000
+# Load environment variables
+ARG PORT
+ENV PORT=${PORT}
+
+# Expose the port from .env (defaults to 3000 if not specified)
+EXPOSE ${PORT}
 
 # Start the Node.js server
 CMD ["node", "index.js"]
